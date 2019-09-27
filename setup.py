@@ -14,20 +14,16 @@ def get_contents(*args):
         return handle.read()
 
 
-def get_info(*args):
+def get_version(*args):
     contents = get_contents(*args)
     metadata = dict(re.findall(r'__([a-z]+)__\s+=\s+[\'"]([^\'"]+)', contents))
-    return (metadata["version"], metadata["doc"])
-
-
-mod_info = get_info("sqfssync", "__init__.py")
+    return metadata["version"]
 
 
 setup(
     name="sqfssync",
-    version=mod_info[0],
+    version=get_version("sqfssync", "__init__.py"),
     description="Portage plugin to download and mount latest SquashFS snapshot.",
-    long_description=mod_info[1],
     url="https://github.com/g0dsCookie/portage-sqfssync",
     author="g0dsCookie",
     author_email="g0dscookie@cookieprojects.de",

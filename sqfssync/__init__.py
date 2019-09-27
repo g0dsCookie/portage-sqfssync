@@ -3,7 +3,7 @@ Downloads latest squashfs, unmounts old
 and mounts the new one.
 """
 __doc__ = doc
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 
 
 from portage.localization import _
