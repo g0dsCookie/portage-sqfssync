@@ -44,10 +44,11 @@ sync-uri = http://distfiles.gentoo.org/snapshots/squashfs/
 The following additional configuration options are available.
 These are all prefixed by *sync-sqfs-*, e.g. *sync-sqfs-file*.
 
-| Option         | Description                                                  | Default |
-| -------------- | ------------------------------------------------------------ | ------- |
-| file           | SquashFS file to download from *sync-uri*                    | gentoo-current.xz.sqfs |
-| verify         | Should the downloaded file be verified?                      | yes |
-| signature-file | The file containing the signature for *sync-sqfs-file*       | sha512sum.txt |
-| options        | Additional mount options.                                    | |
-| tmpdir         | Path to the temporary directory to download new SquashFS to. | $PORTAGE_TMPDIR or /tmp if unset. |
+| Option                | Description                                                  | Default |
+| --------------------- | ------------------------------------------------------------ | ------- |
+| file                  | SquashFS file to download from *sync-uri*                    | gentoo-current.xz.sqfs |
+| verify                | Should the downloaded file be verified?                      | yes |
+| sync-openpgp-key-path | Path to keyring to validate digest signature against         | /usr/share/openpgp-keys/gentoo-release.asc |
+| signature-file        | The file containing the signature for *sync-sqfs-file*       | sha512sum.txt |
+| options               | Additional mount options.                                    | |
+| tmpdir                | Path to the temporary directory to download new SquashFS to. | $PORTAGE_TMPDIR or /tmp if unset. |
