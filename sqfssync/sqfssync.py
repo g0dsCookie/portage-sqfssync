@@ -3,10 +3,12 @@ import logging
 from hashlib import sha512
 import urllib.parse
 import shutil
+import io
 
 import portage
 from portage.util import writemsg_level
 from portage.sync.syncbase import NewBase
+from gemato.exceptions import GematoException
 
 import libmount as mnt
 import urllib3
@@ -40,6 +42,12 @@ class SqfsSync(NewBase):
     def verify_sig(self):
         return self.repo.module_specific_options.get(
             "sync-sqfs-verify", "yes").lower() in ("true", "yes")
+
+    @property
+    def openpgp_key_path(self):
+        return self.repo.module_specific_options.get(
+            "sync-openpgp-key-path",
+            "/usr/share/openpgp-keys/gentoo-release.asc")
 
     @property
     def signature_file(self):
@@ -122,6 +130,27 @@ class SqfsSync(NewBase):
             ), level=logging.ERROR, noiselevel=-1)
             return
 
+        openpgp_env = self._get_openpgp_env(self.openpgp_key_path)
+        if openpgp_env is None:
+            writemsg_level("Failed to initialize OpenPGP environment\n",
+                           level=logging.ERROR, noiselevel=-1)
+            return
+
+        try:
+            with open(self.openpgp_key_path, "rb") as f:
+                openpgp_env.import_key(f)
+
+            verify_buffer = io.StringIO(r.data.decode("utf8"))
+            verified = openpgp_env.verify_file(verify_buffer)
+            openpgp_env.close()
+        except GematoException as e:
+            writemsg_level(
+                f"Failed to validate digest signature:\n{e}\n",
+                level=logging.ERROR,
+                noiselevel=-1,
+            )
+            return
+
         lines = r.data.decode("utf8").split("\n")
         for line in lines:
             if not line:
@@ -139,7 +168,7 @@ class SqfsSync(NewBase):
                 writemsg_level("Could not find SHA512 signature for %s\n" %
                                self.filename, level=logging.ERROR,
                                noiselevel=-1)
-                return (1, False)
+                return ("", False)
             hasher = sha512()
 
         writemsg_level("Downloading new SquashFS file...\n")
@@ -159,9 +188,9 @@ class SqfsSync(NewBase):
                 writemsg_level("Signature %s does not match!\n" %
                                hasher.hexdigest(),
                                level=logging.ERROR, noiselevel=-1)
-                return
+                return ("", False)
 
-        return tmpfile
+        return (tmpfile, True)
 
     def exists(self):
         """Tests whether the directory exists and is mounted"""
@@ -171,8 +200,8 @@ class SqfsSync(NewBase):
         """Download latest squashfs and remount."""
         destfile = os.path.join(self.repo.location.rstrip("/") + ".sqfs")
         destfile_new = destfile + ".new"
-        tmpfile = self._download()
-        if not tmpfile:
+        tmpfile, success = self._download()
+        if not success or not tmpfile:
             return (1, False)
 
         writemsg_level("Replacing old SquashFS with new one...\n")
