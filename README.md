@@ -9,9 +9,7 @@ This plugin can be configured within *repos.conf* and used with
 
 ## Installation
 
-Either use my ebuild shipped with my own
-[portage overlay](https://github.com/g0dscookie/cookie-monster)
-or clone this repository and use *setup.py* to install locally:
+Clone this repository and use *setup.py* to install locally:
 
 ```sh
 git clone https://github.com/g0dsCookie/portage-sqfssync.git
@@ -26,6 +24,7 @@ This will install the *sqfssync* module into *portage.sync.modules.sqfssync*.
 * \>=dev-lang/python-3.6
 * sys-apps/util-linux[python]
 * dev-python/urllib3
+* sys-fs/squashfs-tools
 
 ## Configuration
 
