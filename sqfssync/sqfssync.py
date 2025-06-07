@@ -55,27 +55,8 @@ class SqfsSync(NewBase):
             "sync-sqfs-signature-file", "sha512sum.txt")
 
     @property
-    def uid(self):
-        return self.repo.module_specific_options.get("sync-sqfs-uid",
-                                                     "portage")
-
-    @property
-    def gid(self):
-        return self.repo.module_specific_options.get("sync-sqfs-gid",
-                                                     "portage")
-
-    @property
-    def mode(self):
-        return self.repo.module_specific_options.get("sync-sqfs-mode",
-                                                     "0555")
-
-    @property
     def mount_options(self):
-        opts = [
-            "uid=%s" % self.uid,
-            "gid=%s" % self.gid,
-            "mode=%s" % self.mode
-        ]
+        opts = []
         extra = self.repo.module_specific_options.get("sync-sqfs-options")
         if extra:
             opts.append(extra)

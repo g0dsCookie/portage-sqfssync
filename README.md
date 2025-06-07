@@ -49,8 +49,5 @@ These are all prefixed by *sync-sqfs-*, e.g. *sync-sqfs-file*.
 | file           | SquashFS file to download from *sync-uri*                    | gentoo-current.xz.sqfs |
 | verify         | Should the downloaded file be verified?                      | yes |
 | signature-file | The file containing the signature for *sync-sqfs-file*       | sha512sum.txt |
-| uid            | The *uid=* option passed to mount.                           | portage |
-| gid            | The *gid=* option passed to mount.                           | portage |
-| mode           | The *mode=* option passed to mount.                          | 0555 |
 | options        | Additional mount options.                                    | |
 | tmpdir         | Path to the temporary directory to download new SquashFS to. | $PORTAGE_TMPDIR or /tmp if unset. |
