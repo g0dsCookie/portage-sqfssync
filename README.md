@@ -9,6 +9,21 @@ This plugin can be configured within *repos.conf* and used with
 
 ## Installation
 
+Clone this repository and use *pip* to install locally:
+
+```sh
+git clone https://github.com/g0dsCookie/portage-sqfssync.git
+cd portage-sqfssync
+sudo python -m pip install --break-system-packages .
+```
+
+Or create/use an ebuild for this.
+Here's an older [example](https://github.com/g0dsCookie/cookie-monster/blob/master/app-portage/sqfssync/sqfssync-0.1.1.ebuild).
+
+### Legacy
+
+**Calling *setup.py* directly will soon be removed.**
+
 Clone this repository and use *setup.py* to install locally:
 
 ```sh
@@ -22,6 +37,7 @@ This will install the *sqfssync* module into *portage.sync.modules.sqfssync*.
 ## Requirements
 
 * \>=dev-lang/python-3.6
+* dev-python/pip (to install this)
 * sys-apps/util-linux[python]
 * dev-python/urllib3
 * sys-fs/squashfs-tools
