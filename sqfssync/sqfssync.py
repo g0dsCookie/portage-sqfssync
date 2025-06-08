@@ -5,6 +5,7 @@ from hashlib import sha512
 import urllib.parse
 import shutil
 import io
+from datetime import datetime, timedelta
 
 import portage
 from portage.util import writemsg_level
@@ -37,9 +38,15 @@ class SqfsSync(NewBase):
         self._http = urllib3.PoolManager()
 
     @property
+    def yesterday(self) -> str:
+        return (datetime.now() - timedelta(days=1)).strftime('%Y%m%d')
+
+    @property
     def filename(self) -> str:
+        today = datetime.now().strftime('%Y%m%d')
         return self.repo.module_specific_options.get(
-            "sync-sqfs-file", "gentoo-current.xz.sqfs")
+            'sync-sqfs-file',
+            'gentoo-%(yesterday)s.xz.sqfs' % {'yesterday': self.yesterday})
 
     @property
     def verify_sig(self) -> bool:
@@ -55,7 +62,8 @@ class SqfsSync(NewBase):
     @property
     def signature_file(self) -> str:
         return self.repo.module_specific_options.get(
-            "sync-sqfs-signature-file", "sha512sum.txt")
+            'sync-sqfs-signature-file',
+            'gentoo-%(yesterday)s.sha512sum.txt' % {'yesterday': self.yesterday})
 
     @property
     def mount_options(self) -> str:
