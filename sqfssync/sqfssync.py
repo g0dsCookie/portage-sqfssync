@@ -1,5 +1,6 @@
 import os
 import logging
+import typing
 from hashlib import sha512
 import urllib.parse
 import shutil
@@ -34,28 +35,28 @@ class SqfsSync(NewBase):
         self._http = urllib3.PoolManager()
 
     @property
-    def filename(self):
+    def filename(self) -> str:
         return self.repo.module_specific_options.get(
             "sync-sqfs-file", "gentoo-current.xz.sqfs")
 
     @property
-    def verify_sig(self):
+    def verify_sig(self) -> bool:
         return self.repo.module_specific_options.get(
             "sync-sqfs-verify", "yes").lower() in ("true", "yes")
 
     @property
-    def openpgp_key_path(self):
+    def openpgp_key_path(self) -> str:
         return self.repo.module_specific_options.get(
             "sync-openpgp-key-path",
             "/usr/share/openpgp-keys/gentoo-release.asc")
 
     @property
-    def signature_file(self):
+    def signature_file(self) -> str:
         return self.repo.module_specific_options.get(
             "sync-sqfs-signature-file", "sha512sum.txt")
 
     @property
-    def mount_options(self):
+    def mount_options(self) -> str:
         opts = []
         extra = self.repo.module_specific_options.get("sync-sqfs-options")
         if extra:
@@ -63,16 +64,16 @@ class SqfsSync(NewBase):
         return ",".join(opts)
 
     @property
-    def tempdir(self):
+    def tempdir(self) -> str:
         tmpdir = self.repo.module_specific_options.get("sync-sqfs-tmpdir")
         if not tmpdir:
             tmpdir = os.getenv("PORTAGE_TMPDIR", "/tmp")
         return tmpdir
 
-    def _is_mounted(self):
+    def _is_mounted(self) -> bool:
         return os.path.ismount(self.repo.location)
 
-    def _unmount(self, dir):
+    def _unmount(self, dir) -> bool:
         ctx = mnt.Context()
         ctx.target = dir
         try:
@@ -80,10 +81,10 @@ class SqfsSync(NewBase):
         except Exception as err:
             writemsg_level("Failed to unmount %s: %r\n" % (dir, err),
                            level=logging.ERROR, noiselevel=-1)
-            return
+            return False
         return True
 
-    def _mount(self, source, target):
+    def _mount(self, source: str, target: str) -> bool:
         ctx = mnt.Context()
         ctx.source = source
         ctx.target = target
@@ -95,10 +96,10 @@ class SqfsSync(NewBase):
         except Exception as err:
             writemsg_level("Failed to mount %s: %r\n" % (source, err),
                            level=logging.ERROR, noiselevel=-1)
-            return
+            return False
         return True
 
-    def _fetch_signature(self):
+    def _fetch_signature(self) -> str:
         writemsg_level("Fetching file signature...\n")
         digest_uri = urllib.parse.urljoin(self.repo.sync_uri,
                                           self.signature_file)
@@ -139,7 +140,7 @@ class SqfsSync(NewBase):
             if line.endswith(self.filename):
                 return line[:128]
 
-    def _download(self):
+    def _download(self) -> tuple[str, bool]:
         url = urllib.parse.urljoin(self.repo.sync_uri, self.filename)
         tmpfile = os.path.join(self.tempdir, self.filename + ".tmp")
 
@@ -173,11 +174,11 @@ class SqfsSync(NewBase):
 
         return (tmpfile, True)
 
-    def exists(self):
+    def exists(self) -> bool:
         """Tests whether the directory exists and is mounted"""
         return os.path.exists(self.repo.location)
 
-    def update(self):
+    def update(self) -> tuple[int, bool]:
         """Download latest squashfs and remount."""
         destfile = os.path.join(self.repo.location.rstrip("/") + ".sqfs")
         destfile_new = destfile + ".new"
@@ -219,7 +220,7 @@ class SqfsSync(NewBase):
             return (6, False)
         return (os.EX_OK, True)
 
-    def new(self, **kwargs):
+    def new(self, **kwargs) -> tuple[int, bool]:
         """Do the initial download and install of the repository"""
         if kwargs:
             self._kwargs(kwargs)
