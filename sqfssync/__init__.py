@@ -29,10 +29,8 @@ module_spec = {
             'module_specific_options': (
                 'sync-sqfs-file',
                 'sync-sqfs-verify',
+                'sync-openpgp-key-path',
                 'sync-sqfs-signature-file',
-                'sync-sqfs-uid',
-                'sync-sqfs-gid',
-                'sync-sqfs-mode',
                 'sync-sqfs-options',
                 'sync-sqfs-tmpdir',
             )
