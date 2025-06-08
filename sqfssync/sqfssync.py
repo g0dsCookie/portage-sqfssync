@@ -9,6 +9,8 @@ import io
 import portage
 from portage.util import writemsg_level
 from portage.sync.syncbase import NewBase
+
+from gemato.openpgp import GNUPG, OpenPGPEnvironment, OpenPGPSignatureList
 from gemato.exceptions import GematoException
 
 import libmount as mnt
@@ -99,6 +101,33 @@ class SqfsSync(NewBase):
             return False
         return True
 
+    def _pgp_verify(self,
+                    openpgp_env: OpenPGPEnvironment,
+                    f: typing.IO[str]) -> tuple[bytes, OpenPGPSignatureList]:
+        exitst, out, err = openpgp_env._spawn_gpg(
+                [GNUPG, '--batch', '--status-fd', '1', '--verify', '-o', '-'],
+                f.read().encode('utf8'))
+
+        out_arr: list[bytes] = out.split(b'\n')
+        if len(out_arr) == 0:
+            return # TODO
+
+        gpg_plainstart = out_arr.pop(0)
+        if not gpg_plainstart.startswith(b'[GNUPG:] PLAINTEXT'):
+            return # TODO
+
+        gpg_plain_arr: list[bytes] = []
+        for line in out_arr:
+            if line.startswith(b'[GNUPG:]'):
+                break
+            gpg_plain_arr.append(line)
+
+        gpg_plain = b'\n'.join(gpg_plain_arr)
+        out = b'\n'.join(out_arr[len(gpg_plain_arr):])
+
+        return (gpg_plain,
+                openpgp_env._process_gpg_verify_output(out, err, True))
+
     def _fetch_signature(self) -> str:
         writemsg_level("Fetching file signature...\n")
         digest_uri = urllib.parse.urljoin(self.repo.sync_uri,
@@ -123,7 +152,8 @@ class SqfsSync(NewBase):
                 openpgp_env.import_key(f)
 
             verify_buffer = io.StringIO(r.data.decode("utf8"))
-            verified = openpgp_env.verify_file(verify_buffer)
+            verified_data, signatures = self._pgp_verify(openpgp_env,
+                                                         verify_buffer)
             openpgp_env.close()
         except GematoException as e:
             writemsg_level(
@@ -133,7 +163,7 @@ class SqfsSync(NewBase):
             )
             return
 
-        lines = r.data.decode("utf8").split("\n")
+        lines = verified_data.decode("utf8").split("\n")
         for line in lines:
             if not line:
                 continue
